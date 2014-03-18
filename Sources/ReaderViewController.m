@@ -183,7 +183,7 @@
         if (page - pagesVisible <= 1) {
             [newPageSet addIndex:1];
         } else {
-            [newPageSet addIndex:page - pagesVisible];
+            [newPageSet addIndex:page - [self pagesVisibleForPage:page - 1]];
         }
 
         if (page + pagesVisible > pageCount) {
