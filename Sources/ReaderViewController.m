@@ -132,7 +132,7 @@
 
     /* hacky way to reload all content views, completely */
     contentViews = [NSMutableDictionary dictionary];
-    [theScrollView.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    [[theScrollView.subviews copy] makeObjectsPerformSelector:@selector(removeFromSuperview)];
     NSInteger page = currentPage;
     currentPage = -1;
     [self showDocumentPage:page];
