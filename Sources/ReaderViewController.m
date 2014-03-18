@@ -60,7 +60,7 @@
 
 	BOOL isVisible;
 
-    int pagesVisible;
+    NSInteger pagesVisible;
 }
 
 #pragma mark Constants
