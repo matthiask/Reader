@@ -37,8 +37,10 @@
 @implementation ReaderContentView
 {
 	ReaderContentPage *theContentView;
+    ReaderContentPage *theContentViewDual;
 
 	ReaderContentThumb *theThumbView;
+    ReaderContentThumb *theThumbViewDual;
 
 	UIView *theContainerView;
 }
@@ -70,6 +72,14 @@ static inline CGFloat ZoomScaleThatFits(CGSize target, CGSize source)
 	CGFloat w_scale = (target.width / source.width);
 
 	CGFloat h_scale = (target.height / source.height);
+
+    BOOL isLandscape = UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation]);
+
+    if (isLandscape) {
+        w_scale /= 2;
+    }
+
+    return w_scale;
 
 	return ((w_scale < h_scale) ? w_scale : h_scale);
 }
@@ -103,11 +113,37 @@ static inline CGFloat ZoomScaleThatFits(CGSize target, CGSize source)
 		self.bouncesZoom = YES;
 		self.delegate = self;
 
+        BOOL isLandscape = UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation]);
+
 		theContentView = [[ReaderContentPage alloc] initWithURL:fileURL page:page password:phrase];
 
 		if (theContentView != nil) // Must have a valid and initialized content view
 		{
-			theContainerView = [[UIView alloc] initWithFrame:theContentView.bounds];
+
+            if (isLandscape) {
+                theContentViewDual = [[ReaderContentPage alloc] initWithURL:fileURL page:page + 1 password:phrase];
+
+                theContentView.frame = CGRectMake(
+                    theContentView.frame.origin.x,
+                    theContentView.frame.origin.y,
+                    theContentView.frame.size.width / 2,
+                    theContentView.frame.size.height / 2);
+
+                theContentViewDual.frame = CGRectMake(
+                    theContentView.frame.size.width,
+                    theContentView.frame.origin.y,
+                    theContentView.frame.size.width,
+                    theContentView.frame.size.height);
+
+                theContainerView = [[UIView alloc] initWithFrame:CGRectMake(
+                    theContentView.frame.origin.x,
+                    theContentView.frame.origin.y,
+                    theContentView.frame.size.width * 2,
+                    theContentView.frame.size.height)];
+            } else {
+                theContainerView = [[UIView alloc] initWithFrame:theContentView.bounds];
+            }
+
 
 			theContainerView.autoresizesSubviews = NO;
 			theContainerView.userInteractionEnabled = NO;
@@ -136,6 +172,10 @@ static inline CGFloat ZoomScaleThatFits(CGSize target, CGSize source)
 #endif // end of READER_ENABLE_PREVIEW Option
 
 			[theContainerView addSubview:theContentView]; // Add the content view to the container view
+
+            if (isLandscape) {
+                [theContainerView addSubview:theContentViewDual];
+            }
 
 			[self addSubview:theContainerView]; // Add the container view to the scroll view
 
