@@ -239,7 +239,7 @@
 		unusedViews = nil; // Release unused views
 
 		CGFloat viewWidthX1 = viewRect.size.width;
-		CGFloat viewWidthX2 = (viewWidthX1 * 2.0f);
+		// CGFloat viewWidthX2 = (viewWidthX1 * 2.0f);
 
 		CGPoint contentOffset = CGPointZero;
 
