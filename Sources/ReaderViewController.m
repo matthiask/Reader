@@ -59,6 +59,8 @@
 	NSDate *lastHideTime;
 
 	BOOL isVisible;
+
+    int pagesVisible;
 }
 
 #pragma mark Constants
@@ -145,71 +147,83 @@
 	[mainToolbar setBookmarkState:bookmarked]; // Update
 }
 
+- (NSInteger)basePageForPage:(NSInteger)page {
+    BOOL isLandscape = UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation]);
+
+    if (!isLandscape || page <= 1)
+        return 1;
+
+    if (page % 2)
+        return page - 1;
+
+    return page;
+}
+
+- (NSInteger)pagesVisibleForPage:(NSInteger)page {
+    BOOL isLandscape = UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation]);
+
+    page = [self basePageForPage:page];
+    if (!isLandscape || page <= 1 || page == [document.pageCount integerValue])
+        return 1;
+
+    return 2;
+}
+
 - (void)showDocumentPage:(NSInteger)page
 {
-    BOOL isLandscape = UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation]);
-    int pagesPerScreen = (isLandscape ? 2 : 1);
-
 	if (page != currentPage) // Only if different
 	{
-		NSInteger minValue; NSInteger maxValue;
-		NSInteger maxPage = [document.pageCount integerValue];
-		NSInteger minPage = 1;
+        page = [self basePageForPage:page];
+        pagesVisible = [self pagesVisibleForPage:page];
+        NSInteger pageCount = [document.pageCount integerValue];
 
-		if ((page < minPage) || (page > maxPage)) return;
+        NSMutableIndexSet *newPageSet = [NSMutableIndexSet indexSet];
+        [newPageSet addIndex:page];
 
-		if (maxPage <= PAGING_VIEWS) // Few pages
-		{
-			minValue = minPage;
-			maxValue = maxPage;
-		}
-		else // Handle more pages
-		{
-			minValue = (page - pagesPerScreen);
-			maxValue = (page + pagesPerScreen);
+        if (page - pagesVisible <= 1) {
+            [newPageSet addIndex:1];
+        } else {
+            [newPageSet addIndex:page - pagesVisible];
+        }
 
-			if (minValue < minPage) {
-                minValue += pagesPerScreen;
-                maxValue += pagesPerScreen;
+        if (page + pagesVisible > pageCount) {
+            [newPageSet addIndex:pageCount];
+        } else {
+            [newPageSet addIndex:page + pagesVisible];
+        }
+
+        NSLog(@"contentViewsToBeRendered: %@", newPageSet);
+
+        NSMutableDictionary *unusedViews = [contentViews mutableCopy];
+		__block CGRect viewRect = CGRectZero;
+        viewRect.size = theScrollView.bounds.size;
+
+        [newPageSet enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
+            NSNumber *key = [NSNumber numberWithInteger:idx];
+            ReaderContentView *contentView = [contentViews objectForKey:key];
+            if (!contentView) {
+				NSURL *fileURL = document.fileURL;
+                NSString *phrase = document.password; // Document properties
+
+				contentView = [[ReaderContentView alloc]
+                    initWithFrame:viewRect
+                    fileURL:fileURL
+                    page:idx
+                    password:phrase
+                    dualPage:[self pagesVisibleForPage:idx] == 2];
+
+				[theScrollView addSubview:contentView];
+                [contentViews setObject:contentView forKey:key];
+
+				contentView.message = self;
             } else {
-				if (maxValue > maxPage) {
-                    minValue -= pagesPerScreen;
-                    maxValue -= pagesPerScreen;
-                }
-            }
-		}
-
-		NSMutableIndexSet *newPageSet = [NSMutableIndexSet new];
-
-		NSMutableDictionary *unusedViews = [contentViews mutableCopy];
-
-		CGRect viewRect = CGRectZero; viewRect.size = theScrollView.bounds.size;
-
-		for (NSInteger number = minValue; number <= maxValue; number += pagesPerScreen)
-		{
-			NSNumber *key = [NSNumber numberWithInteger:number]; // # key
-
-			ReaderContentView *contentView = [contentViews objectForKey:key];
-
-			if (contentView == nil) // Create a brand new document content view
-			{
-				NSURL *fileURL = document.fileURL; NSString *phrase = document.password; // Document properties
-
-				contentView = [[ReaderContentView alloc] initWithFrame:viewRect fileURL:fileURL page:number password:phrase];
-
-				[theScrollView addSubview:contentView]; [contentViews setObject:contentView forKey:key];
-
-				contentView.message = self; [newPageSet addIndex:number];
-			}
-			else // Reposition the existing content view
-			{
-				contentView.frame = viewRect; [contentView zoomReset];
-
+				contentView.frame = viewRect;
+                [contentView zoomReset];
 				[unusedViews removeObjectForKey:key];
-			}
+            }
 
 			viewRect.origin.x += viewRect.size.width;
-		}
+        }];
 
 		[unusedViews enumerateKeysAndObjectsUsingBlock: // Remove unused views
 			^(id key, id object, BOOL *stop)
@@ -229,6 +243,14 @@
 
 		CGPoint contentOffset = CGPointZero;
 
+        if (page == 1) {
+        } else if (page == pageCount) {
+            contentOffset.x = viewWidthX1;
+        } else {
+            contentOffset.x = viewWidthX1;
+        }
+
+        /*
 		if (maxPage >= PAGING_VIEWS)
 		{
 			if (page == maxPage)
@@ -240,7 +262,8 @@
 		else
 			if (page == (PAGING_VIEWS - 1))
 				contentOffset.x = viewWidthX1;
-
+        */
+        
 		if (CGPointEqualToPoint(theScrollView.contentOffset, contentOffset) == false)
 		{
 			theScrollView.contentOffset = contentOffset; // Update content offset
@@ -251,7 +274,9 @@
 			document.pageNumber = [NSNumber numberWithInteger:page]; // Update page number
 		}
 
-		NSURL *fileURL = document.fileURL; NSString *phrase = document.password; NSString *guid = document.guid;
+		NSURL *fileURL = document.fileURL;
+        NSString *phrase = document.password;
+        NSString *guid = document.guid;
 
 		if ([newPageSet containsIndex:page] == YES) // Preview visible page first
 		{
@@ -567,8 +592,7 @@
 
 			[theScrollView setContentOffset:contentOffset animated:YES];
 
-            BOOL isLandscape = UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation]);
-			theScrollView.tag = (page - (isLandscape ? 2 : 1)); // Decrement page number
+			theScrollView.tag = (page - pagesVisible); // Decrement page number
 
 		}
 	}
@@ -590,8 +614,7 @@
 
 			[theScrollView setContentOffset:contentOffset animated:YES];
 
-            BOOL isLandscape = UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation]);
-			theScrollView.tag = (page + (isLandscape ? 2 : 1)); // Increment page number
+			theScrollView.tag = (page + pagesVisible); // Increment page number
 		}
 	}
 }

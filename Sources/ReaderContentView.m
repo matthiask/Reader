@@ -43,6 +43,8 @@
     ReaderContentThumb *theThumbViewDual;
 
 	UIView *theContainerView;
+
+    BOOL dualPage;
 }
 
 #pragma mark Constants
@@ -67,19 +69,16 @@ static void *ReaderContentViewContext = &ReaderContentViewContext;
 
 #pragma mark ReaderContentView functions
 
-static inline CGFloat ZoomScaleThatFits(CGSize target, CGSize source)
+static inline CGFloat ZoomScaleThatFits(BOOL dualPage, CGSize target, CGSize source)
 {
 	CGFloat w_scale = (target.width / source.width);
 
 	CGFloat h_scale = (target.height / source.height);
 
-    BOOL isLandscape = UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation]);
-
-    if (isLandscape) {
+    if (dualPage) {
         w_scale /= 2;
+        return w_scale;
     }
-
-    return w_scale;
 
 	return ((w_scale < h_scale) ? w_scale : h_scale);
 }
@@ -90,14 +89,14 @@ static inline CGFloat ZoomScaleThatFits(CGSize target, CGSize source)
 {
 	CGRect targetRect = CGRectInset(self.bounds, CONTENT_INSET, CONTENT_INSET);
 
-	CGFloat zoomScale = ZoomScaleThatFits(targetRect.size, theContentView.bounds.size);
+	CGFloat zoomScale = ZoomScaleThatFits(dualPage, targetRect.size, theContentView.bounds.size);
 
 	self.minimumZoomScale = zoomScale; // Set the minimum and maximum zoom scales
 
 	self.maximumZoomScale = (zoomScale * ZOOM_MAXIMUM); // Max number of zoom levels
 }
 
-- (id)initWithFrame:(CGRect)frame fileURL:(NSURL *)fileURL page:(NSUInteger)page password:(NSString *)phrase
+- (id)initWithFrame:(CGRect)frame fileURL:(NSURL *)fileURL page:(NSUInteger)page password:(NSString *)phrase dualPage:(BOOL)showDualPage
 {
 	if ((self = [super initWithFrame:frame]))
 	{
@@ -113,14 +112,14 @@ static inline CGFloat ZoomScaleThatFits(CGSize target, CGSize source)
 		self.bouncesZoom = YES;
 		self.delegate = self;
 
-        BOOL isLandscape = UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation]);
+        dualPage = showDualPage;
 
 		theContentView = [[ReaderContentPage alloc] initWithURL:fileURL page:page password:phrase];
 
 		if (theContentView != nil) // Must have a valid and initialized content view
 		{
 
-            if (isLandscape) {
+            if (dualPage) {
                 theContentViewDual = [[ReaderContentPage alloc] initWithURL:fileURL page:page + 1 password:phrase];
 
                 theContentView.frame = CGRectMake(
@@ -173,7 +172,7 @@ static inline CGFloat ZoomScaleThatFits(CGSize target, CGSize source)
 
 			[theContainerView addSubview:theContentView]; // Add the content view to the container view
 
-            if (isLandscape) {
+            if (dualPage) {
                 [theContainerView addSubview:theContentViewDual];
             }
 
@@ -268,6 +267,10 @@ static inline CGFloat ZoomScaleThatFits(CGSize target, CGSize source)
 
 - (id)processSingleTap:(UITapGestureRecognizer *)recognizer
 {
+    CGPoint location = [recognizer locationInView:self];
+    NSLog(@"point: %f %f", location.x, location.y);
+
+    // TODO what about theContentViewDual?
 	return [theContentView processSingleTap:recognizer];
 }
 
