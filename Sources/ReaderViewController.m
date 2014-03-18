@@ -95,6 +95,7 @@
 {
 	[self updateScrollViewContentSize]; // Update the content size
 
+    /*
 	NSMutableIndexSet *pageSet = [NSMutableIndexSet indexSet]; // Page set
 
 	[contentViews enumerateKeysAndObjectsUsingBlock: // Enumerate content views
@@ -125,6 +126,14 @@
 	{
 		theScrollView.contentOffset = contentOffset; // Update content offset
 	}
+    */
+
+    /* hacky way to reload all content views, completely */
+    contentViews = [NSMutableDictionary dictionary];
+    [theScrollView.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    NSInteger page = currentPage;
+    currentPage = -1;
+    [self showDocumentPage:page];
 }
 
 - (void)updateToolbarBookmarkIcon
