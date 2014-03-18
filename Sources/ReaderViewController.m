@@ -138,6 +138,9 @@
 
 - (void)showDocumentPage:(NSInteger)page
 {
+    BOOL isLandscape = UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation]);
+    int pagesPerScreen = (isLandscape ? 2 : 1);
+
 	if (page != currentPage) // Only if different
 	{
 		NSInteger minValue; NSInteger maxValue;
@@ -153,14 +156,18 @@
 		}
 		else // Handle more pages
 		{
-			minValue = (page - 1);
-			maxValue = (page + 1);
+			minValue = (page - pagesPerScreen);
+			maxValue = (page + pagesPerScreen);
 
-			if (minValue < minPage)
-				{minValue++; maxValue++;}
-			else
-				if (maxValue > maxPage)
-					{minValue--; maxValue--;}
+			if (minValue < minPage) {
+                minValue += pagesPerScreen;
+                maxValue += pagesPerScreen;
+            } else {
+				if (maxValue > maxPage) {
+                    minValue -= pagesPerScreen;
+                    maxValue -= pagesPerScreen;
+                }
+            }
 		}
 
 		NSMutableIndexSet *newPageSet = [NSMutableIndexSet new];
@@ -169,7 +176,7 @@
 
 		CGRect viewRect = CGRectZero; viewRect.size = theScrollView.bounds.size;
 
-		for (NSInteger number = minValue; number <= maxValue; number++)
+		for (NSInteger number = minValue; number <= maxValue; number += pagesPerScreen)
 		{
 			NSNumber *key = [NSNumber numberWithInteger:number]; // # key
 
@@ -551,7 +558,9 @@
 
 			[theScrollView setContentOffset:contentOffset animated:YES];
 
-			theScrollView.tag = (page - 1); // Decrement page number
+            BOOL isLandscape = UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation]);
+			theScrollView.tag = (page - (isLandscape ? 2 : 1)); // Decrement page number
+
 		}
 	}
 }
@@ -572,7 +581,8 @@
 
 			[theScrollView setContentOffset:contentOffset animated:YES];
 
-			theScrollView.tag = (page + 1); // Increment page number
+            BOOL isLandscape = UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation]);
+			theScrollView.tag = (page + (isLandscape ? 2 : 1)); // Increment page number
 		}
 	}
 }
