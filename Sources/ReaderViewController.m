@@ -686,7 +686,6 @@
 					if ((mainToolbar.hidden == YES) || (mainPagebar.hidden == YES))
 					{
 						[mainToolbar showToolbar]; [mainPagebar showPagebar]; // Show
-                        self.navigationController.navigationBarHidden = NO;
 					}
 				}
 			}
@@ -784,7 +783,6 @@
 		}
 
 		[mainToolbar hideToolbar]; [mainPagebar hidePagebar]; // Hide
-        self.navigationController.navigationBarHidden = YES;
 
 		lastHideTime = [NSDate date];
 	}
