@@ -37,14 +37,14 @@
 @implementation ReaderContentView
 {
 	ReaderContentPage *theContentView;
-    ReaderContentPage *theContentViewDual;
+	ReaderContentPage *theContentViewDual;
 
 	ReaderContentThumb *theThumbView;
-    ReaderContentThumb *theThumbViewDual;
+	ReaderContentThumb *theThumbViewDual;
 
 	UIView *theContainerView;
 
-    BOOL dualPage;
+	BOOL dualPage;
 }
 
 #pragma mark Constants
@@ -75,10 +75,10 @@ static inline CGFloat ZoomScaleThatFits(BOOL dualPage, CGSize target, CGSize sou
 
 	CGFloat h_scale = (target.height / source.height);
 
-    if (dualPage) {
-        w_scale /= 2;
-        return w_scale;
-    }
+	if (dualPage) {
+		w_scale /= 2;
+		return w_scale;
+	}
 
 	return ((w_scale < h_scale) ? w_scale : h_scale);
 }
@@ -112,36 +112,36 @@ static inline CGFloat ZoomScaleThatFits(BOOL dualPage, CGSize target, CGSize sou
 		self.bouncesZoom = YES;
 		self.delegate = self;
 
-        dualPage = showDualPage;
+		dualPage = showDualPage;
 
 		theContentView = [[ReaderContentPage alloc] initWithURL:fileURL page:page password:phrase];
 
 		if (theContentView != nil) // Must have a valid and initialized content view
 		{
 
-            if (dualPage) {
-                theContentViewDual = [[ReaderContentPage alloc] initWithURL:fileURL page:page + 1 password:phrase];
+			if (dualPage) {
+				theContentViewDual = [[ReaderContentPage alloc] initWithURL:fileURL page:page + 1 password:phrase];
 
-                theContentView.frame = CGRectMake(
-                    theContentView.frame.origin.x,
-                    theContentView.frame.origin.y,
-                    theContentView.frame.size.width / 2,
-                    theContentView.frame.size.height / 2);
+				theContentView.frame = CGRectMake(
+					theContentView.frame.origin.x,
+					theContentView.frame.origin.y,
+					theContentView.frame.size.width / 2,
+					theContentView.frame.size.height / 2);
 
-                theContentViewDual.frame = CGRectMake(
-                    theContentView.frame.size.width,
-                    theContentView.frame.origin.y,
-                    theContentView.frame.size.width,
-                    theContentView.frame.size.height);
+				theContentViewDual.frame = CGRectMake(
+					theContentView.frame.size.width,
+					theContentView.frame.origin.y,
+					theContentView.frame.size.width,
+					theContentView.frame.size.height);
 
-                theContainerView = [[UIView alloc] initWithFrame:CGRectMake(
-                    theContentView.frame.origin.x,
-                    theContentView.frame.origin.y,
-                    theContentView.frame.size.width * 2,
-                    theContentView.frame.size.height)];
-            } else {
-                theContainerView = [[UIView alloc] initWithFrame:theContentView.bounds];
-            }
+				theContainerView = [[UIView alloc] initWithFrame:CGRectMake(
+					theContentView.frame.origin.x,
+					theContentView.frame.origin.y,
+					theContentView.frame.size.width * 2,
+					theContentView.frame.size.height)];
+			} else {
+				theContainerView = [[UIView alloc] initWithFrame:theContentView.bounds];
+			}
 
 
 			theContainerView.autoresizesSubviews = NO;
@@ -172,9 +172,9 @@ static inline CGFloat ZoomScaleThatFits(BOOL dualPage, CGSize target, CGSize sou
 
 			[theContainerView addSubview:theContentView]; // Add the content view to the container view
 
-            if (dualPage) {
-                [theContainerView addSubview:theContentViewDual];
-            }
+			if (dualPage) {
+				[theContainerView addSubview:theContentViewDual];
+			}
 
 			[self addSubview:theContainerView]; // Add the container view to the scroll view
 
@@ -267,10 +267,10 @@ static inline CGFloat ZoomScaleThatFits(BOOL dualPage, CGSize target, CGSize sou
 
 - (id)processSingleTap:(UITapGestureRecognizer *)recognizer
 {
-    CGPoint location = [recognizer locationInView:self];
-    NSLog(@"point: %f %f", location.x, location.y);
+	CGPoint location = [recognizer locationInView:self];
+	NSLog(@"point: %f %f", location.x, location.y);
 
-    // TODO what about theContentViewDual?
+	// TODO what about theContentViewDual?
 	return [theContentView processSingleTap:recognizer];
 }
 
