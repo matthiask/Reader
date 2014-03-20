@@ -149,11 +149,15 @@
 
 - (NSInteger)basePageForPage:(NSInteger)page {
 	BOOL isLandscape = UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation]);
+	NSInteger pageCount = [document.pageCount integerValue];
+
+	NSLog(@"landscape: %d, current: %d, count: %d", isLandscape, page, pageCount);
 
 	if (page <= 1)
 		return 1;
 
-	// TODO bounds checking for pageCount?
+	if (page > pageCount)
+		page = pageCount;
 
 	if (!isLandscape)
 		return page;
