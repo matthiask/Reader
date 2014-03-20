@@ -128,6 +128,8 @@ static inline CGFloat ZoomScaleThatFits(BOOL dualPage, CGSize target, CGSize sou
 					theContentView.frame.size.width / 2,
 					theContentView.frame.size.height / 2);
 
+				// The assumption is that the second visible page has the same
+				// size as the first.
 				theContentViewDual.frame = CGRectMake(
 					theContentView.frame.size.width,
 					theContentView.frame.origin.y,
@@ -139,6 +141,7 @@ static inline CGFloat ZoomScaleThatFits(BOOL dualPage, CGSize target, CGSize sou
 					theContentView.frame.origin.y,
 					theContentView.frame.size.width * 2,
 					theContentView.frame.size.height)];
+
 			} else {
 				theContainerView = [[UIView alloc] initWithFrame:theContentView.bounds];
 			}
