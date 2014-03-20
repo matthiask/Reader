@@ -279,9 +279,7 @@
 			document.pageNumber = [NSNumber numberWithInteger:page]; // Update page number
 		}
 
-		NSURL *fileURL = document.fileURL;
-		NSString *phrase = document.password;
-		NSString *guid = document.guid;
+		NSURL *fileURL = document.fileURL; NSString *phrase = document.password; NSString *guid = document.guid;
 
 		if ([newPageSet containsIndex:page] == YES) // Preview visible page first
 		{
